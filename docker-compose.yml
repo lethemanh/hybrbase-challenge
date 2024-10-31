@@ -1,0 +1,40 @@
+# docker compose version
+version: '3.8'
+# all the containers have to declare inside services
+services:
+  postgres:
+    container_name: hybrbase-challenge-db
+    image: postgres:13
+    volumes: 
+      - db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - 5432:${POSTGRES_PORT}
+    networks:
+      - hybrbase-challenge-net
+    restart: unless-stopped
+
+  migration:
+    image: hybrbase-challenge
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command: npm run migration:up
+    depends_on:
+      - postgres
+    networks:
+      - hybrbase-challenge-net
+
+networks:
+  hybrbase-challenge-net:
+    driver: bridge
+    external: true
+
+# save (persist) data
+volumes:
+  db: {}
